@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: wishrise
+  datasource:
+    url: ENC(1ukvi6Dtk8zByTpD7hb/NNHMkW6YWvCkdSx/D9my9/N+2vSM37Sqro3q71y94kYW0gwYrAHb1lCSpQCdiJdfAqPi1adx6lCDNm5+9NmSgxk8IfzqaqBjBLFuAN5VNAbdIr/KEsYfuWQ=)
+    username: ENC(oZZfR6f7cSvoo8UvS+4mmw==)
+    password: ENC(Ig9T0+iyWgY45Sk02JvsuaT3lzFl4cEV)
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor
