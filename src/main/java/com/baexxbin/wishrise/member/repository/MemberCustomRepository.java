@@ -9,11 +9,11 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class MemberRepository {
+public class MemberCustomRepository {
     private final EntityManager em;
 
     public void save(Member member) {
-        em.persist(Member.class);
+        em.persist(member);
     }
 
     public Member findOne(Long id) {
@@ -25,9 +25,13 @@ public class MemberRepository {
                 .getResultList();
     }
 
-    public List<Member> findByName(String name) {
-        return em.createQuery("select m from Member m where m.name = :name", Member.class)
+    public List<Member> findByNickname(String name) {
+        return em.createQuery("select m from Member m where m.nickname = :name", Member.class)
                 .setParameter("name", name)
                 .getResultList();
+    }
+
+    public void update(Member member) {
+        em.merge(member);
     }
 }

@@ -23,7 +23,7 @@ public class Register {
     private Member member;
 
     @OneToOne(fetch = LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "item_id")
+    @JoinColumn(name = "goal_id")
     private Goal goal;
 
     private LocalDateTime registrationDate;
