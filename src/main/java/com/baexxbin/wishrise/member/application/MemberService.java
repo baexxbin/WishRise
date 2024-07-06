@@ -22,7 +22,8 @@ public class MemberService {
     // 회원가입
     @Transactional
     public Long join(MemberInfoDto memberInfoDto) {
-        validateDuplicateMember(memberInfoDto.getNickname());
+        validateDuplicateMemberNickname(memberInfoDto.getNickname());
+        validateDuplicateMemberEmail(memberInfoDto.getEmail());
 
         Member member = createMember(memberInfoDto);
         Member saveMember = memberJpaRepository.save(member);
@@ -30,10 +31,17 @@ public class MemberService {
         return saveMember.getId();
     }
 
-    private void validateDuplicateMember(String nickname) {
+    private void validateDuplicateMemberNickname(String nickname) {
         Optional<Member> findMembers = memberJpaRepository.findByNickname(nickname);
         if (findMembers.isPresent()){
-            throw new IllegalStateException("이미 존재하는 회원입니다.");
+            throw new IllegalStateException("이미 존재하는 아이디입니다.");
+        }
+    }
+
+    private void validateDuplicateMemberEmail(String email) {
+        Optional<Member> findEmail = memberJpaRepository.findByEmail(email);
+        if (findEmail.isPresent()) {
+            throw new IllegalStateException("이미 존재하는 이메일입니다.");
         }
     }
 
@@ -60,7 +68,7 @@ public class MemberService {
     }
 
     // 회원 단일 조회
-    public Optional<Member> find(Long memberId) {
+    private Optional<Member> find(Long memberId) {
         return memberJpaRepository.findById(memberId);
     }
 
@@ -69,8 +77,7 @@ public class MemberService {
     @Transactional
     public void update(Long userId, MemberInfoDto memberInfoDto) {
         Optional<Member> optionalMember = find(userId);
-        Member member = optionalMember.orElseThrow(() -> new EntityNotFoundException("해당 ID의 회원이 존재하지 않습니다."));
+        Member member = optionalMember.orElseThrow(() -> new EntityNotFoundException("존재하지않는 회원입니다."));
         member.edit(memberInfoDto);
-        memberJpaRepository.save(member);
     }
 }
