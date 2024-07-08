@@ -2,11 +2,13 @@ package com.baexxbin.wishrise.member.api;
 
 import com.baexxbin.wishrise.member.application.MemberService;
 import com.baexxbin.wishrise.member.dto.request.MemberInfoDto;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "MemberApi")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
