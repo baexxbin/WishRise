@@ -15,18 +15,15 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
 public class ToWant extends Goal {
-    private String reason;
-    private int price;
+    private Integer price;
 
-    public ToWant(String title, LocalDate targetDate, String reason, int price) {
-        super(title, targetDate);
-        this.reason = reason;
+    public ToWant(String title, String description, LocalDate targetDate, Integer price) {
+        super(GoalType.WANT, title, description, targetDate);
         this.price = price;
     }
 
-    public void updateToWant(String title, LocalDate targetDate, String reason, int price) {
-        this.updateGoal(title, targetDate);
-        this.reason = reason;
+    public void updateToWant(String title, String description, LocalDate targetDate, Integer price) {
+        this.updateGoal(GoalType.WANT, title, description, targetDate);
         this.price = price;
     }
 }

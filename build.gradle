@@ -33,6 +33,8 @@ dependencies {
 	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
 	// Swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+	// Jackson 날짜 및 시간 API
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.3'
 }
 
 tasks.named('test') {
