@@ -18,30 +18,45 @@ import static jakarta.persistence.FetchType.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
-public abstract class Goal {
+public class Goal {
     @Id
     @GeneratedValue
     @Column(name = "goal_id")
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    private GoalType goalType = GoalType.DO;
     private String title;
+    private String description;
 
-    private int heartCount;
     private LocalDate targetDate;
+    private int heartCount = 0;
 
     @JsonIgnore
     @OneToOne(mappedBy = "goal", fetch = LAZY)
     private Register register;
 
 
-    protected Goal(String title, LocalDate targetDate) {
+    // ToDo 기본 생성자
+    protected Goal(String title, String description, LocalDate targetDate) {
         this.title = title;
+        this.description = description;
         this.targetDate = targetDate;
-        this.heartCount = 0;
     }
 
-    public void updateGoal(String title, LocalDate targetDate) {
+
+    // ToWant 자식생성자 호출 시 사용
+    protected Goal(GoalType goalType, String title, String description, LocalDate targetDate) {
+        this.goalType = goalType;
         this.title = title;
+        this.description = description;
+        this.targetDate = targetDate;
+    }
+
+    public void updateGoal(GoalType goalType, String title, String description, LocalDate targetDate) {
+        this.goalType = goalType;
+        this.title = title;
+        this.description = description;
         this.targetDate = targetDate;
     }
 
