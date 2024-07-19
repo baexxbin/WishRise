@@ -1,10 +1,11 @@
 package com.baexxbin.wishrise.goal;
 
-import com.baexxbin.wishrise.goal.api.GoalApiController;
-import com.baexxbin.wishrise.goal.application.GoalService;
+import com.baexxbin.wishrise.goal.application.GoalModuleService;
+import com.baexxbin.wishrise.goal.domain.Goal;
 import com.baexxbin.wishrise.goal.domain.GoalType;
-import com.baexxbin.wishrise.goal.dto.request.GoalSaveDto;
-import com.baexxbin.wishrise.goal.dto.request.GoalServiceDto;
+import com.baexxbin.wishrise.register.api.RegisterApiController;
+import com.baexxbin.wishrise.register.dto.request.RegisterGoalDto;
+import com.baexxbin.wishrise.goal.dto.request.SaveGoalServiceDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,10 +37,11 @@ public class GoalControllerTest {
     private MockMvc mockMvc;
 
     @InjectMocks
-    private GoalApiController goalApiController;
+    private RegisterApiController registerApiController;
 
     @Mock
-    private GoalService goalService;
+    private GoalModuleService goalModuleService;
+
 
     private ObjectMapper objectMapper;
 
@@ -47,22 +49,28 @@ public class GoalControllerTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        mockMvc = MockMvcBuilders.standaloneSetup(goalApiController)
+        mockMvc = MockMvcBuilders.standaloneSetup(registerApiController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
     @Test
     void createGoal() throws Exception {
-        GoalSaveDto goalSaveDto = new GoalSaveDto(GoalType.DO, "title", "description", LocalDate.now(), null);
-        GoalServiceDto goalServiceDto = goalSaveDto.toServiceDto();
+        RegisterGoalDto registerGoalDto = new RegisterGoalDto(GoalType.DO, "title", "description", LocalDate.now(), null);
+        SaveGoalServiceDto saveGoalServiceDto = registerGoalDto.toServiceDto();
 
-        when(goalService.createGoal(any(GoalServiceDto.class))).thenReturn(1L);
+        Goal mockGoal = Goal.builder()
+                .title(saveGoalServiceDto.getTitle())
+                .description(saveGoalServiceDto.getDescription())
+                .targetDate(saveGoalServiceDto.getTargetDate())
+                .build();
 
-        mockMvc.perform(post("/api/goal")
+        when(goalModuleService.createGoal(any(SaveGoalServiceDto.class))).thenReturn(mockGoal);
+
+        mockMvc.perform(post("/api/registrations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .param("loginUserId", "1")
-                        .content(objectMapper.writeValueAsString(goalSaveDto)))
+                        .content(objectMapper.writeValueAsString(registerGoalDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$").value(1L));
     }

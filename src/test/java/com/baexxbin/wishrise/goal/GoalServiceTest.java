@@ -1,10 +1,10 @@
 package com.baexxbin.wishrise.goal;
 
-import com.baexxbin.wishrise.goal.application.GoalService;
+import com.baexxbin.wishrise.goal.application.GoalModuleService;
 import com.baexxbin.wishrise.goal.domain.Goal;
 import com.baexxbin.wishrise.goal.domain.ToWant;
-import com.baexxbin.wishrise.goal.dto.request.GoalServiceDto;
 import com.baexxbin.wishrise.goal.repository.GoalJpaRepository;
+import com.baexxbin.wishrise.goal.dto.request.SaveGoalServiceDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,14 +21,14 @@ import static org.mockito.Mockito.when;
 public class GoalServiceTest {
 
     @InjectMocks
-    private GoalService goalService;
+    private GoalModuleService goalModuleService;
 
     @Mock
     private GoalJpaRepository goalJpaRepository;
 
     @Test
     void createGoal() {
-        GoalServiceDto goalServiceDto = new GoalServiceDto.TodoDto("목표 제목", "내용내용", LocalDate.now());
+        SaveGoalServiceDto saveGoalServiceDto = new SaveGoalServiceDto.TodoSaveDto("목표 제목", "내용내용", LocalDate.now());
 
         Goal expectedGoal = Goal.builder()
                 .title("목표 제목")
@@ -38,13 +38,13 @@ public class GoalServiceTest {
 
         when(goalJpaRepository.save(any(Goal.class))).thenReturn(expectedGoal);
 
-        Long goalId = goalService.createGoal(goalServiceDto);
+        Long goalId = goalModuleService.createGoal(saveGoalServiceDto).getId();
         assertEquals(expectedGoal.getId(), goalId);
     }
 
     @Test
     void createGoalTowant() {
-        GoalServiceDto.TowantDto goalServiceDto = new GoalServiceDto.TowantDto("물건", "갖고싶어요", LocalDate.now(), 1000);
+        SaveGoalServiceDto.TowantSaveDto goalServiceDto = new SaveGoalServiceDto.TowantSaveDto("물건", "갖고싶어요", LocalDate.now(), 1000);
 
         ToWant expectedToWant = ToWant.builder()
                 .title("물건")
@@ -54,7 +54,7 @@ public class GoalServiceTest {
                 .build();
 
         when(goalJpaRepository.save(any(ToWant.class))).thenReturn(expectedToWant);
-        Long goalId = goalService.createGoalTowant(goalServiceDto);
+        Long goalId = goalModuleService.createGoalTowant(goalServiceDto).getId();
         assertEquals(expectedToWant.getId(), goalId);
     }
 }

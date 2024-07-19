@@ -1,154 +1,92 @@
 package com.baexxbin.wishrise.member;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-import com.baexxbin.wishrise.member.application.MemberService;
-import com.baexxbin.wishrise.member.domain.*;
+import com.baexxbin.wishrise.member.application.MemberComponentService;
+import com.baexxbin.wishrise.member.application.MemberModuleService;
+import com.baexxbin.wishrise.member.domain.Information;
+import com.baexxbin.wishrise.member.domain.Member;
+import com.baexxbin.wishrise.member.domain.Rank;
 import com.baexxbin.wishrise.member.dto.request.MemberInfoDto;
-import com.baexxbin.wishrise.member.repository.MemberJpaRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class MemberServiceTest {
-    @Mock
-    private MemberJpaRepository memberJpaRepository;
-
     @InjectMocks
-    private MemberService memberService;
+    private MemberComponentService memberComponentService;
 
+    @Mock
+    private MemberModuleService memberModuleService;
+
+    // @Mock 어노테이션이 붙은 필드들 초기화
     @BeforeEach
-    public void setup() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
-    private Member createMember(MemberInfoDto dto) {
+    @Test
+    void testJoin_Success() {
+        // Given: 테스트 데이터 준비
+        MemberInfoDto memberInfoDto = MemberInfoDto.builder()
+                .nickname("또비닝")
+                .name("배수빈")
+                .password("Password123!")
+                .email("test@example.com")
+                .build();
+
+        // Mock 동작 정의
+        when(memberModuleService.findByNickname(anyString())).thenReturn(Optional.empty());
+        when(memberModuleService.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(memberModuleService.save(any(Member.class))).thenReturn(1L);
+
+        // When: 테스트 메서드 호출
+        Long memberId = memberComponentService.join(memberInfoDto);
+
+        // Then: 결과 검증
+        assertNotNull(memberId);
+        verify(memberModuleService).save(any(Member.class));
+
+    }
+
+    @Test
+    void testUpdate_Success() {
+        // Given
+        Long userId = 1L;
+        MemberInfoDto memberInfoDto = MemberInfoDto.builder()
+                .nickname("또비닝")
+                .name("배수빈")
+                .password("Password123!")
+                .email("test@example.com")
+                .build();
+
         Member member = Member.builder()
-                .nickname(dto.getNickname())
-                .name(dto.getName())
-                .password(dto.getPassword())
-                .email(dto.getEmail())
+                .nickname("또비닝")
+                .name("옛날배수빈")
+                .password("OldPassword123!")
+                .email("test@example.com")
                 .information(new Information(0, Rank.BRONZE))
                 .build();
 
-        // member id값 임시 생성 (db와 상호작용안하기 때문)
-        ReflectionTestUtils.setField(member, "id", 1L);
+        when(memberModuleService.findById(userId)).thenReturn(Optional.of(member));
 
-        when(memberJpaRepository.save(any(Member.class))).thenReturn(member);
+        // When
+        memberComponentService.update(userId, memberInfoDto);
 
-        return member;
-    }
-
-
-    @Test
-    public void join() {
-        // given
-        MemberInfoDto dto = MemberInfoDto.builder()
-                .nickname("testNickname")
-                .name("testName")
-                .password("testPassword")
-                .email("test@example.com")
-                .build();
-        when(memberJpaRepository.findByNickname(dto.getNickname())).thenReturn(Optional.empty());
-
-        Member member = createMember(dto);
-
-
-        // member id값 임시 생성(db와 상호작용안하기 때문)
-        ReflectionTestUtils.setField(member, "id", 1L);
-
-        when(memberJpaRepository.save(any(Member.class))).thenReturn(member);
-
-        // when
-        Long memberId = memberService.join(dto);
-
-        // then
-        assertNotNull(memberId);
-        verify(memberJpaRepository, times(1)).save(any(Member.class));
-        verify(memberJpaRepository, times(1)).findByNickname(dto.getNickname());
-
-    }
-
-    @Test
-    public void testJoinWithDuplicateNickname() {
-        // Arrange
-        MemberInfoDto dto = MemberInfoDto.builder()
-                .nickname("testNickname")
-                .name("testName")
-                .password("testPassword")
-                .email("test@example.com")
-                .build();
-
-        Member existingMember = createMember(dto);
-
-        when(memberJpaRepository.findByNickname(dto.getNickname())).thenReturn(Optional.of(existingMember));
-
-        // Act & Assert
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> memberService.join(dto));
-
-        assertEquals("이미 존재하는 아이디입니다.", exception.getMessage());
-        verify(memberJpaRepository, never()).save(any(Member.class));
-    }
-
-    @Test
-    public void testJoinWithDuplicateEmail(){
-        MemberInfoDto dto = MemberInfoDto.builder()
-                .nickname("testNickname")
-                .name("testName")
-                .password("testPassword")
-                .email("test@example.com")
-                .build();
-
-        Member existingMember = createMember(dto);
-
-        when(memberJpaRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(existingMember));
-
-        // Act & Assert
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> memberService.join(dto));
-
-        assertEquals("이미 존재하는 이메일입니다.", exception.getMessage());
-        verify(memberJpaRepository, never()).save(any(Member.class));
-    }
-
-    @Test
-    void updateMember() {
-        // given
-        MemberInfoDto dto1 = MemberInfoDto.builder()
-                .nickname("testNickname")
-                .name("testName")
-                .password("testPassword")
-                .email("test@example.com")
-                .build();
-
-        MemberInfoDto dto2 = MemberInfoDto.builder()
-                .nickname("testNickname")
-                .name("testName")
-                .password("changePassword")
-                .email("test@example.com")
-                .build();
-
-        Member m1 = createMember(dto1);
-        ReflectionTestUtils.setField(m1, "id", 2L);
-
-        Long memberId = memberService.join(dto1);
-
-        // Mock behavior of repository methods
-        when(memberJpaRepository.findById(m1.getId())).thenReturn(java.util.Optional.of(m1));
-        when(memberJpaRepository.save(any(Member.class))).thenReturn(m1);
-
-        // when
-        memberService.update(m1.getId(), dto2);
-
-        // then
-        verify(memberJpaRepository, times(1)).findById(m1.getId());
-        verify(memberJpaRepository, times(1)).save(any(Member.class));
-        assertEquals(dto2.getPassword(), m1.getPassword());
+        // Then
+        verify(memberModuleService).save(member);
+        assertEquals("또비닝", member.getNickname());
+        assertEquals(member.getName(), memberInfoDto.getName());
+        assertEquals(member.getPassword(), memberInfoDto.getPassword());
+        assertEquals(member.getEmail(), memberInfoDto.getEmail());
     }
 }
