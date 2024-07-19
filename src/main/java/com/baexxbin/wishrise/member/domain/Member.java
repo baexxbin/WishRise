@@ -36,8 +36,7 @@ public class Member {
     private boolean deleted = false;
 
     @Builder
-    public Member(Long id, String nickname, String name, String password, String email, Information information) {
-        this.id = id;
+    public Member(String nickname, String name, String password, String email, Information information) {
         this.nickname = nickname;
         this.name = name;
         this.password = password;

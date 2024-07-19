@@ -1,6 +1,6 @@
 package com.baexxbin.wishrise.member.api;
 
-import com.baexxbin.wishrise.member.application.MemberService;
+import com.baexxbin.wishrise.member.application.MemberComponentService;
 import com.baexxbin.wishrise.member.dto.request.MemberInfoDto;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/members")
 public class MemberApiController {
 
-    private final MemberService memberService;
+    private final MemberComponentService memberComponentService;
 
     // 회원가입
     @PostMapping
     public ResponseEntity<Long> signUp(@RequestBody MemberInfoDto memberInfoDto) {
-        Long memberId = memberService.join(memberInfoDto);
+        Long memberId = memberComponentService.join(memberInfoDto);
         return ResponseEntity.ok(memberId);
     }
 
@@ -27,6 +27,6 @@ public class MemberApiController {
     @PutMapping("{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateMember(@PathVariable Long userId, @RequestBody MemberInfoDto memberInfoDto) {
-        memberService.update(userId, memberInfoDto);
+        memberComponentService.update(userId, memberInfoDto);
     }
 }

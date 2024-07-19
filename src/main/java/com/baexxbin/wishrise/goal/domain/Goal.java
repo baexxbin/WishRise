@@ -4,6 +4,7 @@ import com.baexxbin.wishrise.register.domain.Register;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -17,7 +18,7 @@ import static jakarta.persistence.FetchType.*;
 @DiscriminatorColumn
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 public class Goal {
     @Id
     @GeneratedValue
@@ -25,11 +26,13 @@ public class Goal {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private GoalType goalType = GoalType.DO;
     private String title;
     private String description;
 
     private LocalDate targetDate;
+    @Builder.Default
     private int heartCount = 0;
 
     @JsonIgnore
