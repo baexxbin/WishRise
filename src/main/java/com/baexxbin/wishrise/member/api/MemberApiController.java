@@ -29,4 +29,6 @@ public class MemberApiController {
     public void updateMember(@PathVariable Long userId, @RequestBody MemberInfoDto memberInfoDto) {
         memberComponentService.update(userId, memberInfoDto);
     }
+
+    // 아이디 중복확인
 }
