@@ -3,6 +3,7 @@ package com.baexxbin.wishrise.member.application;
 import com.baexxbin.wishrise.member.domain.Member;
 import com.baexxbin.wishrise.member.repository.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,11 @@ public class MemberModuleService {
     public Long save(Member member) {
         Member saveMember = memberJpaRepository.save(member);
         return saveMember.getId();
+    }
+
+    @Transactional
+    public Member saveEntity(Member member){
+        return memberJpaRepository.save(member);
     }
 
     public Optional<Member> findById(Long memberId) {

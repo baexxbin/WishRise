@@ -1,11 +1,15 @@
 package com.baexxbin.wishrise.member.application;
 
+import com.baexxbin.wishrise.auth.dto.OAuth2UserInfo;
+import com.baexxbin.wishrise.global.util.KeyGenerator;
 import com.baexxbin.wishrise.member.domain.Information;
 import com.baexxbin.wishrise.member.domain.Member;
 import com.baexxbin.wishrise.member.domain.Rank;
+import com.baexxbin.wishrise.member.domain.Role;
 import com.baexxbin.wishrise.member.dto.request.MemberInfoDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,7 @@ import java.util.Optional;
 public class MemberComponentService {
 
     private final MemberModuleService memberModuleService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Long join(MemberInfoDto memberInfoDto) {
@@ -45,9 +50,22 @@ public class MemberComponentService {
         return Member.builder()
                 .nickname(memberInfoDto.getNickname())
                 .name(memberInfoDto.getName())
-                .password(memberInfoDto.getPassword())
+                .password(passwordEncoder.encode(memberInfoDto.getPassword()))
                 .email(memberInfoDto.getEmail())
                 .information(createDefaultInformation())
+                .role(Role.USER)
+                .memberKey(KeyGenerator.generateKey())
+                .build();
+    }
+
+    private Member createOauthMember(OAuth2UserInfo oAuth2UserInfo) {
+        return Member.builder()
+                .name(oAuth2UserInfo.name())
+                .email(oAuth2UserInfo.email())
+                .provider(oAuth2UserInfo.provider())
+                .information(createDefaultInformation())
+                .role(Role.USER)
+                .memberKey(KeyGenerator.generateKey())
                 .build();
     }
 
@@ -64,5 +82,12 @@ public class MemberComponentService {
         Member member = optionalMember.orElseThrow(() -> new EntityNotFoundException("존재하지않는 회원입니다."));
         member.edit(memberInfoDto);
         memberModuleService.save(member);
+    }
+
+    @Transactional
+    public Member loginOrJoin(OAuth2UserInfo oAuth2UserInfo) {
+        Member member = memberModuleService.findByEmail(oAuth2UserInfo.email())
+                .orElseGet(() -> createOauthMember(oAuth2UserInfo));
+        return memberModuleService.saveEntity(member);
     }
 }

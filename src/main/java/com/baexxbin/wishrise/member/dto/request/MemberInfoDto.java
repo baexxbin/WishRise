@@ -27,6 +27,8 @@ public class MemberInfoDto {
     @Email(message = "이메일 형식에 맞지 않습니다.")
     private String email;
 
+
+
     public MemberInfoDto(String nickname, String name, String password, String email) {
         this.nickname = nickname;
         this.name = name;
