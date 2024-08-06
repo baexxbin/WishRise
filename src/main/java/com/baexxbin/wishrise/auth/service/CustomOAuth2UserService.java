@@ -2,8 +2,8 @@ package com.baexxbin.wishrise.auth.service;
 
 import com.baexxbin.wishrise.auth.domain.PrincipalDetails;
 import com.baexxbin.wishrise.auth.dto.OAuth2UserInfo;
+import com.baexxbin.wishrise.member.application.MemberModuleService;
 import com.baexxbin.wishrise.member.domain.Member;
-import com.baexxbin.wishrise.member.repository.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -23,7 +23,7 @@ import java.util.Map;
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final MemberJpaRepository memberJpaRepository;
+    private final MemberModuleService memberModuleService;
 
     @Transactional
     @Override
@@ -42,15 +42,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfo.of(registrationId, oAuth2UserAttributes);
 
         // 5. 회원가입 및 로그인
-        Member member = loginOrJoin(oAuth2UserInfo);
+        Member member = memberModuleService.loginOrJoin(oAuth2UserInfo);
 
         // 6. OAuth2User로 반환
         return new PrincipalDetails(member, oAuth2UserAttributes, userNameAttributeName);
     }
 
-    private Member loginOrJoin(OAuth2UserInfo oAuth2UserInfo) {
-        Member member = memberJpaRepository.findByEmail(oAuth2UserInfo.email())
-                .orElseGet(oAuth2UserInfo::toEntity);
-        return memberJpaRepository.save(member);
-    }
 }

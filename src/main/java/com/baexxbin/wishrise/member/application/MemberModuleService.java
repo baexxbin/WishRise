@@ -1,9 +1,9 @@
 package com.baexxbin.wishrise.member.application;
 
+import com.baexxbin.wishrise.auth.dto.OAuth2UserInfo;
 import com.baexxbin.wishrise.member.domain.Member;
 import com.baexxbin.wishrise.member.repository.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,5 +42,11 @@ public class MemberModuleService {
 
     public List<Member> findAll() {
         return memberJpaRepository.findAll();
+    }
+
+    public Member loginOrJoin(OAuth2UserInfo oAuth2UserInfo) {
+        Member member = memberJpaRepository.findByEmail(oAuth2UserInfo.email())
+                .orElseGet(oAuth2UserInfo::toEntity);
+        return memberJpaRepository.save(member);
     }
 }

@@ -83,11 +83,4 @@ public class MemberComponentService {
         member.edit(memberInfoDto);
         memberModuleService.save(member);
     }
-
-    @Transactional
-    public Member loginOrJoin(OAuth2UserInfo oAuth2UserInfo) {
-        Member member = memberModuleService.findByEmail(oAuth2UserInfo.email())
-                .orElseGet(() -> createOauthMember(oAuth2UserInfo));
-        return memberModuleService.saveEntity(member);
-    }
 }
