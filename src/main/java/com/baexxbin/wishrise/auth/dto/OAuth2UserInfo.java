@@ -2,7 +2,9 @@ package com.baexxbin.wishrise.auth.dto;
 
 import com.baexxbin.wishrise.auth.exception.AuthException;
 import com.baexxbin.wishrise.global.util.KeyGenerator;
+import com.baexxbin.wishrise.member.domain.Information;
 import com.baexxbin.wishrise.member.domain.Member;
+import com.baexxbin.wishrise.member.domain.Rank;
 import com.baexxbin.wishrise.member.domain.Role;
 import lombok.Builder;
 
@@ -44,12 +46,18 @@ public record OAuth2UserInfo(
     }
 
     public Member toEntity() {
+        Information information = Information.builder()
+                .point(0)
+                .rank(Rank.BRONZE)
+                .build();
+
         return Member.builder()
                 .name(name)
                 .email(email)
                 .provider(provider)
-                .memberKey(KeyGenerator.generateKey())
+                .information(information)
                 .role(Role.USER)
+                .memberKey(KeyGenerator.generateKey())
                 .build();
     }
 }
