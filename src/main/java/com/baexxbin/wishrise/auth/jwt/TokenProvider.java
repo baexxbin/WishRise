@@ -2,7 +2,6 @@ package com.baexxbin.wishrise.auth.jwt;
 
 import com.baexxbin.wishrise.auth.domain.Token;
 import com.baexxbin.wishrise.auth.exception.TokenException;
-import com.baexxbin.wishrise.auth.service.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -42,28 +41,41 @@ public class TokenProvider {
     private String key;
     private SecretKey secretKey;
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30L;
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60L * 24 * 7;
+//    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60L * 24 * 7;
     private static final String KEY_ROLE = "role";
-    private final TokenService tokenService;        // 리프레시 토큰 관리 서비스
 
     @PostConstruct
     private void setSecretKey() {
         secretKey = Keys.hmacShaKeyFor(key.getBytes());
     }
 
+    // 내 서비스의 JWT accessToken 발급
     public String generateAccessToken(Authentication authentication) {
-        return generateToken(authentication, ACCESS_TOKEN_EXPIRE_TIME);
+        return generateToken(authentication);
     }
 
     // 1. refresh token 발급
-    public void generateRefreshToken(Authentication authentication, String accessToken) {
-        String refreshToken = generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
-        tokenService.saveOrUpdate(authentication.getName(), refreshToken, accessToken); // redis에 저장
+//    public void generateRefreshToken(Authentication authentication, String accessToken) {
+//        String refreshToken = generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
+//        tokenService.saveOrUpdate(authentication.getName(), refreshToken, accessToken); // redis에 저장
+//    }
+
+    public String generateRefreshToken(Authentication authentication) {
+        Date now = new Date();
+        Date expiredDate = new Date(now.getTime() + (1000 * 60 * 60 * 24 * 7)); // 7일간 유효
+
+        return Jwts.builder()
+                .subject(authentication.getName())
+                .issuedAt(now)
+                .expiration(expiredDate)
+                .signWith(secretKey, Jwts.SIG.HS512)
+                .compact();
     }
 
-    private String generateToken(Authentication authentication, long expireTime) {
+
+    private String generateToken(Authentication authentication) {
         Date now = new Date();
-        Date expiredDate = new Date(now.getTime() + expireTime);
+        Date expiredDate = new Date(now.getTime() + TokenProvider.ACCESS_TOKEN_EXPIRE_TIME);
 
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -78,54 +90,77 @@ public class TokenProvider {
                 .compact();
     }
 
+//    public Authentication getAuthentication(String token) {
+//        Claims claims = parseClaims(token);
+//        List<SimpleGrantedAuthority> authorities = getAuthorities(claims);
+//
+//        // 2. security의 User 객체 생성
+//        User principal = new User(claims.getSubject(), "", authorities);
+//        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+//    }
+
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
-        List<SimpleGrantedAuthority> authorities = getAuthorities(claims);
+        List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+                new SimpleGrantedAuthority(claims.get(KEY_ROLE).toString()));
 
-        // 2. security의 User 객체 생성
         User principal = new User(claims.getSubject(), "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    private List<SimpleGrantedAuthority> getAuthorities(Claims claims) {
-        return Collections.singletonList(new SimpleGrantedAuthority(
-                claims.get(KEY_ROLE).toString()));
-    }
+//    private List<SimpleGrantedAuthority> getAuthorities(Claims claims) {
+//        return Collections.singletonList(new SimpleGrantedAuthority(
+//                claims.get(KEY_ROLE).toString()));
+//    }
 
-    // 3. accessToken 재발급
-    public String reissueAccessToken(String accessToken) {
-        if (StringUtils.hasText(accessToken)) {
-            Token token = tokenService.findByAccessTokenOrThrow(accessToken);
-            String refreshToken = token.getRefreshToken();
+//    // 3. accessToken 재발급
+//    public String reissueAccessToken(String accessToken) {
+//        if (StringUtils.hasText(accessToken)) {
+//            Token token = tokenService.findByAccessTokenOrThrow(accessToken);
+//            String refreshToken = token.getRefreshToken();
+//
+//            if (validateToken(refreshToken)) {
+//                String reissueAccessToken = generateAccessToken(getAuthentication(refreshToken));
+//                tokenService.updateToken(reissueAccessToken, token);
+//                return reissueAccessToken;
+//            }
+//        }
+//        return null;
+//    }
 
-            if (validateToken(refreshToken)) {
-                String reissueAccessToken = generateAccessToken(getAuthentication(refreshToken));
-                tokenService.updateToken(reissueAccessToken, token);
-                return reissueAccessToken;
-            }
-        }
-        return null;
-    }
+//    public boolean validateToken(String token) {
+//        if (!StringUtils.hasText(token)) {
+//            return false;
+//        }
+//
+//        Claims claims = parseClaims(token);
+//        return claims.getExpiration().after(new Date());
+//    }
 
     public boolean validateToken(String token) {
         if (!StringUtils.hasText(token)) {
             return false;
         }
 
-        Claims claims = parseClaims(token);
-        return claims.getExpiration().after(new Date());
+        try {
+            parseClaims(token);
+            return true;
+        } catch (ExpiredJwtException | MalformedJwtException e) {
+            return false;
+        }
     }
 
     private Claims parseClaims(String token) {
         try {
             return Jwts.parser().verifyWith(secretKey).build()
                     .parseSignedClaims(token).getPayload();
-        } catch (ExpiredJwtException e) {
-            return e.getClaims();
-        } catch (MalformedJwtException e) {
+        } catch (ExpiredJwtException e) {       // 토큰 만료
+            return e.getClaims();               // 토큰 만료시에도 Claims 반환
+        } catch (MalformedJwtException e) {     // 형식이 잘못된 토큰
             throw new TokenException(INVALID_TOKEN);
-        } catch (SecurityException e) {
+        } catch (SecurityException e) {         // 서명 검증 실패
             throw new TokenException(INVALID_JWT_SIGNATURE);
         }
     }
+
 }
